@@ -1,1 +1,1 @@
-This is my code note when study <<hand on RL>> 
+This is my code note when study book--hand on Reinforcement learning
