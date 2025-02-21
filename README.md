@@ -1,2 +1,2 @@
-This is my code note when study book--hand on Reinforcement learning
+This is my code note when study book--hand on Reinforcement learning.   
 updating...
