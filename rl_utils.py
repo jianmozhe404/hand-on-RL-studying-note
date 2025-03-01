@@ -4,7 +4,12 @@ import torch
 import collections
 import random
 
-class ReplayBuffer:
+class ReplayBuffer: 
+    '''
+    经验回放池
+    1. 保证神经网络训练所需数据的独立同分布特性
+    2. 提高样本利用率
+    '''
     def __init__(self, capacity):
         self.buffer = collections.deque(maxlen=capacity) 
 
@@ -20,6 +25,9 @@ class ReplayBuffer:
         return len(self.buffer)
 
 def moving_average(a, window_size):
+    '''
+    计算输入数组的对称移动平均, 用于平滑数据
+    '''
     cumulative_sum = np.cumsum(np.insert(a, 0, 0)) 
     middle = (cumulative_sum[window_size:] - cumulative_sum[:-window_size]) / window_size
     r = np.arange(1, window_size-1, 2)
@@ -34,11 +42,12 @@ def train_on_policy_agent(env, agent, num_episodes):
             for i_episode in range(int(num_episodes/10)):
                 episode_return = 0
                 transition_dict = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'dones': []}
-                state = env.reset()
+                state, _ = env.reset(seed=0)
                 done = False
                 while not done:
                     action = agent.take_action(state)
-                    next_state, reward, done, _ = env.step(action)
+                    next_state, reward, terminated,truncated, _ = env.step(action)
+                    done = terminated or truncated
                     transition_dict['states'].append(state)
                     transition_dict['actions'].append(action)
                     transition_dict['next_states'].append(next_state)
@@ -59,11 +68,12 @@ def train_off_policy_agent(env, agent, num_episodes, replay_buffer, minimal_size
         with tqdm(total=int(num_episodes/10), desc='Iteration %d' % i) as pbar:
             for i_episode in range(int(num_episodes/10)):
                 episode_return = 0
-                state = env.reset()
+                state = env.reset(seed=0)
                 done = False
                 while not done:
                     action = agent.take_action(state)
-                    next_state, reward, done, _ = env.step(action)
+                    next_state, reward, terminated,truncated, _ = env.step(action)
+                    done = terminated or truncated
                     replay_buffer.add(state, action, reward, next_state, done)
                     state = next_state
                     episode_return += reward
